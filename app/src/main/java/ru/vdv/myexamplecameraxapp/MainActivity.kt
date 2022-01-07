@@ -1,9 +1,11 @@
 package ru.vdv.myexamplecameraxapp
 
 import android.Manifest
+import android.annotation.SuppressLint
 import android.content.pm.PackageManager
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.widget.Toast
 import androidx.camera.core.ImageCapture
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
@@ -62,6 +64,23 @@ class MainActivity : AppCompatActivity() {
             }
         }
         return if (mediaDir != null && mediaDir.exists()) mediaDir else filesDir
+    }
+
+    @SuppressLint("MissingSuperCall")
+    override fun onRequestPermissionsResult(
+        requestCode: Int,
+        permissions: Array<out String>,
+        grantResults: IntArray
+    ) {
+        if (requestCode == REQUEST_CODE_PERMISSIONS) {
+            if (allPermissionsGranted()) {
+                startCamera()
+            } else {
+                Toast.makeText(this, "Пользователь не предоставил разрешение", Toast.LENGTH_SHORT)
+                    .show()
+                finish()
+            }
+        }
     }
 
     override fun onDestroy() {
