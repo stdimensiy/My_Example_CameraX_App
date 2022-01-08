@@ -8,10 +8,7 @@ import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
 import android.widget.Toast
-import androidx.camera.core.CameraSelector
-import androidx.camera.core.ImageCapture
-import androidx.camera.core.ImageCaptureException
-import androidx.camera.core.Preview
+import androidx.camera.core.*
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
@@ -87,6 +84,13 @@ class MainActivity : AppCompatActivity() {
             Runnable {
                 //связываем жизненные циклы камеры и активити
                 val cameraProvider: ProcessCameraProvider = cameraProviderFuture.get()
+                val imageAnalyzer = ImageAnalysis.Builder()
+                    .build()
+                    .also {
+                        it.setAnalyzer(cameraExecutor, LuminosityAnalyzer { luma ->
+                            Log.d(TAG, "Average luminosity: $luma")
+                        })
+                    }
                 val preview = Preview.Builder().build()
                     .also { it.setSurfaceProvider(viewFinder.surfaceProvider) }
                 imageCapture = ImageCapture.Builder().build()
@@ -96,7 +100,7 @@ class MainActivity : AppCompatActivity() {
                     //отвязка юзкейсов камеры перд привязкой
                     cameraProvider.unbindAll()
                     //привязка юзкейса к камере
-                    cameraProvider.bindToLifecycle(this, cameraSelector, preview, imageCapture)
+                    cameraProvider.bindToLifecycle(this, cameraSelector, preview, imageCapture, imageAnalyzer)
                 } catch (exc: Exception) {
                     Log.e(TAG, "Привязка использования камеры не удалась!")
                 }
