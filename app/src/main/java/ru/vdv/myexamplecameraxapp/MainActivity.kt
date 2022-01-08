@@ -5,8 +5,12 @@ import android.annotation.SuppressLint
 import android.content.pm.PackageManager
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.util.Log
 import android.widget.Toast
+import androidx.camera.core.CameraSelector
 import androidx.camera.core.ImageCapture
+import androidx.camera.core.Preview
+import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import kotlinx.android.synthetic.main.activity_main.*
@@ -46,7 +50,26 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun startCamera() {
-        TODO("Not yet implemented")
+        val cameraProviderFuture = ProcessCameraProvider.getInstance(this)
+
+        cameraProviderFuture.addListener(
+            Runnable {
+                //связываем жизненные циклы камеры и активити
+                val cameraProvider: ProcessCameraProvider = cameraProviderFuture.get()
+                val preview = Preview.Builder().build()
+                    .also { it.setSurfaceProvider(viewFinder.surfaceProvider) }
+                //выбираем заднюю камеру по умолчанию
+                val cameraSelector = CameraSelector.DEFAULT_BACK_CAMERA
+                try {
+                    //отвязка юзкейсов камеры перд привязкой
+                    cameraProvider.unbindAll()
+                    //привязка юзкейса к камере
+                    cameraProvider.bindToLifecycle(this, cameraSelector, preview)
+                } catch (exc: Exception) {
+                    Log.e(TAG, "Привязка использования камеры не удалась!")
+                }
+            }, ContextCompat.getMainExecutor(this)
+        )
     }
 
     private fun allPermissionsGranted(): Boolean {
